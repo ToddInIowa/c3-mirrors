@@ -2,16 +2,19 @@ import { WebSocket } from 'ws';
 import mqtt from 'mqtt';
 const config = require('../config/config.js');
 
+console.log(config)
 
 async function TestConnection() {
+  console.log('Testing Connection');
   const response = await fetch(`http://${config.ftcLive.IP}:${config.ftcLive.Port}/api/v1/version/`);
   const data = await response.json();
   console.log(`API Version: ${data.version}`);
 
+  console.log('Testing Events Exist:');
   for (const event of config.ftcLive.Event) {
     const response2 = await fetch(`http://${config.ftcLive.IP}:${config.ftcLive.Port}/api/v1/events/${config.ftcLive.Event}/`);
     const data2 = await response2.json();
-    console.log(`Event Name: ${data2.name}`);
+    console.log(`  Event Name: ${data2.name}`);
   }
   return true;
 }
@@ -62,28 +65,34 @@ async function connectWebSocket(eventCode: string, cloud: mqtt.MqttClient) {
 
       // For each team, publish the message to the MQTT broker if the team won, lost, or tied
       if (teamData.red1) {
-        cloud.publish(`team/${teamData.red1},`, redMessage);
-        console.log(`${teamData.red1},`,redMessage);
+        const message = `${teamData.red1},${redMessage}`;
+        cloud.publish(`${config.mqttServer.Topic}`, message);
+        console.log(`${teamData.red1}`, message);
       }
       if (teamData.red2) {
-        cloud.publish(`${teamData.red2},`, redMessage);
-        console.log(`${teamData.red2},`, redMessage);
+        const message = `${teamData.red2},${redMessage}`;
+        cloud.publish(`${config.mqttServer.Topic}`, message);
+        console.log(`${teamData.red2}`, message);
       }
       if (teamData.red3) {
-        cloud.publish(`${teamData.red3}`, redMessage);
-        console.log(`${teamData.red3},`, redMessage);
+        const message = `${teamData.red3},${redMessage}`;
+        cloud.publish(`${config.mqttServer.Topic}`, message);
+        console.log(`${teamData.red3}`, message);
       }
       if (teamData.blue1) {
-        cloud.publish(`${teamData.blue1}`, blueMessage);
-        console.log(`${teamData.blue1},`, blueMessage);
+        const message = `${teamData.blue1},${redMessage}`;
+        cloud.publish(`${config.mqttServer.Topic}`, message);
+        console.log(`${teamData.blue1}`, message);
       }
       if (teamData.blue2) {
-        cloud.publish(`${teamData.blue2}`, blueMessage);
-        console.log(`${teamData.blue2},`, blueMessage);
+        const message = `${teamData.blue2},${redMessage}`;
+        cloud.publish(`${config.mqttServer.Topic}`, message);
+        console.log(`${teamData.blue2}`, message);
       }
       if (teamData.blue3) {
-        cloud.publish(`${teamData.blue3}`, blueMessage);
-        console.log(`${teamData.blue3},`, blueMessage);
+        const message = `${teamData.blue3},${redMessage}`;
+        cloud.publish(`${config.mqttServer.Topic}`, message);
+        console.log(`${teamData.blue3}`, message);
       }
     }
   };
@@ -125,7 +134,7 @@ async function runSystem() {
     }
     console.log('System Running');
   } catch (err: any) {
-    console.error(err?.message || 'Unknown Error');
+    console.error('Caught Error:', err?.message || 'Unknown Error');
   }
 }
 
