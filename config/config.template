@@ -1,0 +1,24 @@
+//Rename this file to config.js and update the settings.
+
+const config = {
+    ftcLive: {
+        IP: 'localhost',
+        Port: 18080,
+        Event: ['test3'],
+    },
+    mqttServer: {
+        Broker: 'mqtt://localhost:1883',
+        Topic: 'test',
+        options:  {
+            // Clean session
+            //clean: true,
+            //connectTimeout: 4000,
+            // Authentication
+            clientId: 'node',
+            //username: 'emqx_test',
+            //password: 'emqx_test',
+            },
+    }
+  }
+
+  module.exports = config;
