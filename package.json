@@ -4,8 +4,9 @@
   "description": "",
   "main": "dist/app.js",
   "scripts": {
-    "start": "tsc && node dist/app.js",
+    "start": "tsc && node dist/src/app.js",
     "lint": "eslint . --ext .ts",
+    "clean": "rm -rf dist",
     "broker-start": "docker pull eclipse-mosquitto && docker run -d --name mqtt-broker -p 1883:1883 -p 9001:9001 -v ./mosquitto.conf:/mosquitto/config/mosquitto.conf eclipse-mosquitto",
     "broker-stop": "docker stop mqtt-broker && docker rm mqtt-broker",
     "broker-log": "docker logs -f mqtt-broker",
