@@ -9,8 +9,6 @@ const config = {
   mqttTopic: 'test',
 }
 
-
-
 console.log('Hello World');
 
 
@@ -31,12 +29,33 @@ async function connectWebSocket(cloud: mqtt.MqttClient) {
   ws.onopen = () => {
     console.log('WebSocket Open');
   };
-  ws.onmessage = (event) => {
+  ws.onmessage = async (event) => {
     if (typeof event.data === 'string' && event.data === 'pong') {
       return;
     }
-    console.log('WebSocket Message: ', event.data);
-    cloud.publish(config.mqttTopic, JSON.stringify(event.data));
+    const message = JSON.parse(event.data.toString());
+    console.log('WebSocket Message: ', message);
+    const number = message.payload?.number;
+    const updateType = message.updateType;
+    console.log('Match Number:', number);
+    console.log('Update Type:', updateType);
+    if (updateType === 'MATCH_POST') {
+      const matchInfo = await fetch(`http://${config.ftcLiveIP}:${config.ftcLivePort}/api/v1/events/${config.ftcLiveEvent}/matches/${number}/`);
+      const matchData = await matchInfo.json();
+      console.log('Match Data:', matchData);
+      const sendData = {
+        matchNumber: matchData.matchNumber,
+        redScore: matchData.redScore,
+        blueScore: matchData.blueScore,
+        red1: matchData.red?.robot1,
+        red2: matchData.red?.robot2,
+        red3: matchData.red?.robot3,
+        blue1: matchData.blue?.robot1,
+        blue2: matchData.blue?.robot2,
+        blue3: matchData.blue?.robot3,
+      }
+      cloud.publish(config.mqttTopic, JSON.stringify(sendData));
+    }
   };
   ws.onclose = () => {
     console.log('WebSocket Close');
