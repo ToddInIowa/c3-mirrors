@@ -1,0 +1,29 @@
+{
+  "name": "c3-mirrors",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/app.js",
+  "scripts": {
+    "start": "tsc && node dist/app.js",
+    "lint": "eslint . --ext .ts",
+    "broker-start": "docker pull eclipse-mosquitto && docker run -d --name mqtt-broker -p 1883:1883 -p 9001:9001 -v ./mosquitto.conf:/mosquitto/config/mosquitto.conf eclipse-mosquitto",
+    "broker-stop": "docker stop mqtt-broker && docker rm mqtt-broker",
+    "broker-log": "docker logs -f mqtt-broker",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "eslint": "^8.57.0",
+    "eslint-config-standard-with-typescript": "^43.0.1",
+    "eslint-plugin-import": "^2.29.1",
+    "eslint-plugin-n": "^16.6.2",
+    "eslint-plugin-promise": "^6.1.1",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "mqtt": "^5.3.6",
+    "ws": "^8.16.0"
+  }
+}
