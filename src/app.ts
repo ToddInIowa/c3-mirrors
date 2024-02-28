@@ -4,28 +4,26 @@ import mqtt from 'mqtt';
 const config = {
   ftcLiveIP: 'localhost',
   ftcLivePort: 18080,
-  ftcLiveEvent: 'test3',
+  ftcLiveEvent: ['test3'],
   mqttBroker: 'mqtt://localhost:1883',
   mqttTopic: 'test',
 }
-
-console.log('Hello World');
-
 
 async function TestConnection() {
   const response = await fetch(`http://${config.ftcLiveIP}:${config.ftcLivePort}/api/v1/version/`);
   const data = await response.json();
   console.log(`API Version: ${data.version}`);
 
-  const response2 = await fetch(`http://${config.ftcLiveIP}:${config.ftcLivePort}/api/v1/events/${config.ftcLiveEvent}/`);
-  const data2 = await response2.json();
-  console.log(`Event Name: ${data2.name}`);
-
+  for (const event of config.ftcLiveEvent) {
+    const response2 = await fetch(`http://${config.ftcLiveIP}:${config.ftcLivePort}/api/v1/events/${config.ftcLiveEvent}/`);
+    const data2 = await response2.json();
+    console.log(`Event Name: ${data2.name}`);
+  }
   return true;
 }
 
-async function connectWebSocket(cloud: mqtt.MqttClient) {
-  const ws = new WebSocket(`ws://${config.ftcLiveIP}:${config.ftcLivePort}/api/v2/stream/?code=${config.ftcLiveEvent}`);
+async function connectWebSocket(eventCode: string, cloud: mqtt.MqttClient) {
+  const ws = new WebSocket(`ws://${config.ftcLiveIP}:${config.ftcLivePort}/api/v2/stream/?code=${eventCode}`);
   ws.onopen = () => {
     console.log('WebSocket Open');
   };
@@ -40,10 +38,10 @@ async function connectWebSocket(cloud: mqtt.MqttClient) {
     console.log('Match Number:', number);
     console.log('Update Type:', updateType);
     if (updateType === 'MATCH_POST') {
-      const matchInfo = await fetch(`http://${config.ftcLiveIP}:${config.ftcLivePort}/api/v1/events/${config.ftcLiveEvent}/matches/${number}/`);
+      const matchInfo = await fetch(`http://${config.ftcLiveIP}:${config.ftcLivePort}/api/v1/events/${eventCode}/matches/${number}/`);
       const matchData = await matchInfo.json();
-      console.log('Match Data:', matchData);
-      const sendData = {
+      //console.log('Match Data:', matchData);
+      const teamData = {
         matchNumber: matchData.matchNumber,
         redScore: matchData.redScore,
         blueScore: matchData.blueScore,
@@ -54,7 +52,36 @@ async function connectWebSocket(cloud: mqtt.MqttClient) {
         blue2: matchData.blue?.robot2,
         blue3: matchData.blue?.robot3,
       }
-      cloud.publish(config.mqttTopic, JSON.stringify(sendData));
+      // I assume at this point you would do something like this:
+      let redMessage = 'tie' as 'win' | 'loss' | 'tie';
+      let blueMessage = 'tie' as 'win' | 'loss' | 'tie';
+      if (teamData.redScore > teamData.blueScore) {
+        redMessage = 'win';
+        blueMessage = 'loss';
+      } else if (teamData.blueScore > teamData.redScore) {
+        redMessage = 'loss';
+        blueMessage = 'win';
+      }
+
+      // For each team, publish the message to the MQTT broker if the team won, lost, or tied
+      if (teamData.red1) {
+        cloud.publish(`team/${teamData.red1}`, redMessage);
+      }
+      if (teamData.red2) {
+        cloud.publish(`team/${teamData.red2}`, redMessage);
+      }
+      if (teamData.red3) {
+        cloud.publish(`team/${teamData.red3}`, redMessage);
+      }
+      if (teamData.blue1) {
+        cloud.publish(`team/${teamData.blue1}`, blueMessage);
+      }
+      if (teamData.blue2) {
+        cloud.publish(`team/${teamData.blue2}`, blueMessage);
+      }
+      if (teamData.blue3) {
+        cloud.publish(`team/${teamData.blue3}`, blueMessage);
+      }
     }
   };
   ws.onclose = () => {
@@ -90,7 +117,9 @@ async function runSystem() {
     console.log('Running System');
     await TestConnection();
     const cloud = await connectMQTT();
-    await connectWebSocket(cloud);
+    for (const event of config.ftcLiveEvent) {
+      await connectWebSocket(event, cloud);
+    }
     console.log('System Running');
   } catch (err: any) {
     console.error(err?.message || 'Unknown Error');
