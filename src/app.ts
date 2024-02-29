@@ -94,6 +94,74 @@ async function onWebSocketMessage (event: MessageEvent, eventCode: string, cloud
       console.log(`Send Message: '${message}' to '${config.mqttServer.Topic}'`)
       cloud.publish(`${config.mqttServer.Topic}`, message)
     })
+  } else if (updateType === 'MATCH_START') {
+    console.log('Collecting Match Data')
+    const matchInfo = await fetch(`http://${config.ftcLive.IP}:${config.ftcLive.Port}/api/v1/events/${eventCode}/matches/${number}/`)
+    console.log('Request Made')
+    const matchData = await matchInfo.json()
+    // console.log('Match Data:', matchData)
+    const teamData = {
+      matchNumber: matchData.matchNumber as number,
+      red1: matchData.red?.robot1 as number | undefined,
+      red2: matchData.red?.robot2 as number | undefined,
+      red3: matchData.red?.robot3 as number | undefined,
+      blue1: matchData.blue?.robot1 as number | undefined,
+      blue2: matchData.blue?.robot2 as number | undefined,
+      blue3: matchData.blue?.robot3 as number | undefined
+    }
+    const messages: string[] = []
+    if (teamData.red1 !== undefined) {
+      messages.push(`${teamData.red1},start`)
+    }
+    if (teamData.red2 !== undefined) {
+      messages.push(`${teamData.red2},start`)
+    }
+    if (teamData.red3 !== undefined) {
+      messages.push(`${teamData.red3},start`)
+    }
+    if (teamData.blue1 !== undefined) {
+      messages.push(`${teamData.blue1},start`)
+    }
+    if (teamData.blue2 !== undefined) {
+      messages.push(`${teamData.blue2},start`)
+    }
+    if (teamData.blue3 !== undefined) {
+      messages.push(`${teamData.blue3},start`)
+    }
+  } else if (updateType === 'MATCH_ABORT') {
+    console.log('Collecting Match Data')
+    const matchInfo = await fetch(`http://${config.ftcLive.IP}:${config.ftcLive.Port}/api/v1/events/${eventCode}/matches/${number}/`)
+    console.log('Request Made')
+    const matchData = await matchInfo.json()
+    // console.log('Match Data:', matchData)
+    const teamData = {
+      matchNumber: matchData.matchNumber as number,
+      red1: matchData.red?.robot1 as number | undefined,
+      red2: matchData.red?.robot2 as number | undefined,
+      red3: matchData.red?.robot3 as number | undefined,
+      blue1: matchData.blue?.robot1 as number | undefined,
+      blue2: matchData.blue?.robot2 as number | undefined,
+      blue3: matchData.blue?.robot3 as number | undefined
+    }
+    const messages: string[] = []
+    if (teamData.red1 !== undefined) {
+      messages.push(`${teamData.red1},abort`)
+    }
+    if (teamData.red2 !== undefined) {
+      messages.push(`${teamData.red2},abort`)
+    }
+    if (teamData.red3 !== undefined) {
+      messages.push(`${teamData.red3},abort`)
+    }
+    if (teamData.blue1 !== undefined) {
+      messages.push(`${teamData.blue1},abort`)
+    }
+    if (teamData.blue2 !== undefined) {
+      messages.push(`${teamData.blue2},abort`)
+    }
+    if (teamData.blue3 !== undefined) {
+      messages.push(`${teamData.blue3},abort`)
+    }
   }
 }
 
